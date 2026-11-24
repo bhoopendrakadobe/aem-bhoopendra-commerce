@@ -4,6 +4,8 @@
 
 The Commerce Cart block renders a comprehensive shopping cart interface with product management, order summary, gift options, and wishlist integration. It provides a full-featured cart experience with configurable options for item management, shipping estimation, and checkout flow.
 
+It also shows a **free-shipping progress banner** (`free-shipping-progress.js`) below the cart heading that tells shoppers how far they are from the free-shipping threshold.
+
 ## Integration
 
 ### Block Configuration
@@ -21,6 +23,25 @@ The Commerce Cart block renders a comprehensive shopping cart interface with pro
 | `enable-updating-product` | string | `'false'` | Enables product editing via mini-PDP modal | No | Shows/hides edit buttons for configurable products |
 | `undo-remove-item` | string | `'false'` | Enables undo functionality when removing items | No | Shows/hides undo option after item removal |
 
+### Site Configuration (Configuration Service)
+
+| Config Key | Type | Default | Description | Required | Side Effects |
+|------------|------|---------|-------------|----------|--------------|
+| `free-shipping-threshold` | number | `100` | Cart subtotal (excluding tax, store currency) at which free shipping is unlocked. Read with `getConfigValue()` from the site's `public.json`. | No | Changes the banner's remaining amount and progress; invalid or non-positive values fall back to `100` |
+
+### Placeholders
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Cart.FreeShipping.remaining` | `You are {amount} away from free shipping.` | Banner text below the threshold; `{amount}` is replaced with the formatted remaining amount |
+| `Cart.FreeShipping.unlocked` | `You have unlocked free shipping!` | Banner text once the threshold is reached |
+
+Authored in the `placeholders/cart` sheet; the defaults above are used when a key is missing.
+
+### Slots
+
+- `CartSummaryList` → `Heading`: appends the free-shipping banner as a sibling of the cart heading (`ctx.appendSibling`).
+
 <!-- ### URL Parameters
 
 No URL parameters directly affect this block's behavior. -->
@@ -35,6 +56,7 @@ No localStorage keys are used by this block. -->
 
 - `events.on('cart/data', callback)` - Listens for cart data updates to refresh the cart display and toggle empty state
 - `events.on('wishlist/alert', callback)` - Listens for wishlist actions to show wishlist-related notifications
+- `events.on('cart/data', callback, { eager: true })` - (free-shipping banner) Recalculates remaining amount and progress; the subscription is released with `destroy()` → `off()`
 
 #### Event Emitters
 
@@ -49,6 +71,7 @@ No localStorage keys are used by this block. -->
 - **Configurable Products**: When configurable products are present and editing is enabled, shows edit buttons
 - **Gift Options**: Shows gift options section when cart is not empty
 - **Promotions**: Cart items show applicable discount/promotion rule labels beneath their details
+- **Free Shipping**: Banner is hidden for an empty cart, shows the remaining amount and a progress bar below the threshold, and switches to the "unlocked" (positive) style once the subtotal reaches it
 
 ### User Interaction Flows
 
