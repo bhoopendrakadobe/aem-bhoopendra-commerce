@@ -139,6 +139,30 @@ export function preloadFile(href, as) {
 }
 
 /**
+ * Adds preconnect hints for the given URLs' origins (deduplicated, cross-origin only).
+ * @param {Array<string|undefined>} urls
+ */
+export function preconnectOrigins(urls) {
+  const origins = new Set();
+  urls.forEach((url) => {
+    try {
+      const { origin } = new URL(url, window.location.href);
+      if (origin !== window.location.origin) origins.add(origin);
+    } catch {
+      // ignore invalid/missing URLs
+    }
+  });
+  origins.forEach((origin) => {
+    if (document.head.querySelector(`link[rel="preconnect"][href="${origin}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = origin;
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  });
+}
+
+/**
  * Notifies dropins about the current loading state.
  * @param {string} event The loading state to notify
  */
@@ -328,6 +352,9 @@ export async function loadCommerceLazy() {
 export async function initializeCommerce() {
   // Initialize Config
   initializeConfig(await getConfigFromSession());
+
+  // Warm up connections to the Commerce GraphQL origins before drop-ins start fetching
+  preconnectOrigins([getConfigValue('commerce-core-endpoint'), getConfigValue('commerce-endpoint')]);
 
   // Set Fetch GraphQL (Core)
   CORE_FETCH_GRAPHQL.setEndpoint(getConfigValue('commerce-core-endpoint') || await getConfigValue('commerce-endpoint'));
