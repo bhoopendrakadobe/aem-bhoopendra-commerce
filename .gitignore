@@ -17,3 +17,6 @@ scripts/__dropins__/**/*.map
 !AGENTS.md
 
 .scout/
+
+# Production config lives in the Configuration Service (admin.hlx.page), never on main
+/config.json

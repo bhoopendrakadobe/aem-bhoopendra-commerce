@@ -39,6 +39,7 @@ import {
   getProductLink,
   renderCartItemPromotions,
 } from '../../scripts/commerce.js';
+import { createFreeShippingProgress } from './free-shipping-progress.js';
 
 export default async function decorate(block) {
   // Configuration
@@ -172,6 +173,10 @@ export default async function decorate(block) {
     }
   }
 
+  const freeShipping = createFreeShippingProgress({
+    labels: placeholders?.Cart?.FreeShipping,
+  });
+
   // Render Containers
   const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
   await Promise.all([
@@ -188,6 +193,10 @@ export default async function decorate(block) {
       enableRemoveItem: enableRemoveItem === 'true',
       undo: undo === 'true',
       slots: {
+        Heading: (ctx) => {
+          ctx.appendSibling(freeShipping.element);
+        },
+
         Thumbnail: (ctx) => {
           const { item, defaultImageProps } = ctx;
           const anchorWrapper = document.createElement('a');
